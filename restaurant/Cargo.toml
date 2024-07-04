@@ -1,0 +1,13 @@
+[package]
+name = "restaurant"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+chrono = "0.4.38"
+futures = "0.3.30"
+thiserror = "1.0.61"
+
+[dev-dependencies]
+pretty_assertions = { version="1.4.0", features = [ "unstable" ] }
