@@ -24,25 +24,23 @@ pub struct MenuItem {
     pub name: String,
     pub cook_time: TimeDelta,
 }
+pub type RepoMenuItem = RepoItem<MenuItem>;
 
 pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
 pub trait Repository {
-    fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoItem<MenuItem>>>> + Send;
-    fn get(&self, id: u32) -> impl Future<Output = RepoResult<RepoItem<MenuItem>>> + Send;
+    fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoMenuItem>>> + Send;
+    fn get(&self, id: u32) -> impl Future<Output = RepoResult<RepoMenuItem>> + Send;
 
-    fn create(
-        &mut self,
-        item: MenuItem,
-    ) -> impl Future<Output = RepoResult<RepoItem<MenuItem>>> + Send;
-    fn remove(&mut self, item: RepoItem<MenuItem>) -> impl Future<Output = RepoResult<()>> + Send;
-    fn update(&mut self, item: RepoItem<MenuItem>) -> impl Future<Output = RepoResult<()>> + Send;
+    fn create(&mut self, item: MenuItem) -> impl Future<Output = RepoResult<RepoMenuItem>> + Send;
+    fn remove(&mut self, item: RepoMenuItem) -> impl Future<Output = RepoResult<()>> + Send;
+    fn update(&mut self, item: RepoMenuItem) -> impl Future<Output = RepoResult<()>> + Send;
 }
 
-pub async fn get<T: Repository>(repo: &T) -> Result<Vec<RepoItem<MenuItem>>> {
+pub async fn get<T: Repository>(repo: &T) -> Result<Vec<RepoMenuItem>> {
     repo.get_all().await.map_err(MenuError::RepoOperation)
 }
 
-impl RepoItem<MenuItem> {
+impl RepoMenuItem {
     // NOTE: would be a series of functions that encompass the types of operations we'd want for a menu
     // set_cook_time is implemented as an example, not that it would work without a fully implemented MenuRepository
 

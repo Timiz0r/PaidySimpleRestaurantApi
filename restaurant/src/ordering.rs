@@ -1,9 +1,7 @@
-use std::future::Future;
-
+use crate::{layout::RepoTable, menu::RepoMenuItem, RepoItem};
 use chrono::{DateTime, Utc};
+use std::future::Future;
 use thiserror::Error;
-
-use crate::{layout::Table, menu::MenuItem, RepoItem};
 
 #[derive(Error, Debug)]
 pub enum OrderingError {
@@ -14,8 +12,8 @@ pub enum OrderingError {
 pub type Result<T> = std::result::Result<T, OrderingError>;
 #[derive(Debug)]
 pub struct Order<'a> {
-    pub table: &'a RepoItem<Table>,
-    pub menu_item: &'a RepoItem<MenuItem>,
+    pub table: &'a RepoTable,
+    pub menu_item: &'a RepoMenuItem,
     pub time_placed: DateTime<Utc>,
 }
 
@@ -35,8 +33,8 @@ pub trait Repository<'a> {
 
 pub async fn place_order<'a, T: Repository<'a>>(
     repo: &mut T,
-    table: &'a RepoItem<Table>,
-    item: &'a RepoItem<MenuItem>,
+    table: &'a RepoTable,
+    item: &'a RepoMenuItem,
     quantity: u32,
 ) -> Result<()> {
     repo.create(
