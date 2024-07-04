@@ -2,31 +2,31 @@ mod order_repository;
 mod static_repository;
 
 use std::{
-    fmt::Debug,
+    fmt::{self, Debug},
     ops::{Deref, DerefMut},
 };
 
 pub(crate) use order_repository::*;
-use restaurant::ordering::Order;
+use restaurant::{ordering::Order, RepoItem};
 // these arent currently used, but implemented it to see what the complete impl would look like
 pub(crate) use static_repository::*;
 
-pub(crate) struct ComparableOrder<'a>(pub Order<'a>);
+pub(crate) struct ComparableOrder<'a>(pub RepoItem<Order<'a>>);
 
 // would be obnoxious to maintain all the fields, so just trust id
 // not currently implementing PartialEq for these types because they aren't meant to be =='d, but we could do it anyway
-impl<'a> PartialEq<Order<'a>> for ComparableOrder<'a> {
-    fn eq(&self, other: &Order<'a>) -> bool {
-        self.0.id == other.id
-            && self.0.table.id == other.table.id
-            && self.0.menu_item.id == other.menu_item.id
+impl<'a> PartialEq<RepoItem<Order<'a>>> for ComparableOrder<'a> {
+    fn eq(&self, other: &RepoItem<Order<'a>>) -> bool {
+        self.0.id() == other.id()
+            && self.0.table.id() == other.table.id()
+            && self.0.menu_item.id() == other.menu_item.id()
         // TODO: see if we can make a clock a driven port
     }
 }
 
 impl<'a> Debug for ComparableOrder<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#?}", self.0)
+        fmt::Debug::fmt(&self.0.item(), f)
     }
 }
 

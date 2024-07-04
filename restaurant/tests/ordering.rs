@@ -5,6 +5,7 @@ use restaurant::{
     layout::Table,
     menu::MenuItem,
     ordering::{self, Order, OrderingError},
+    RepoItem,
 };
 
 mod common;
@@ -14,13 +15,15 @@ fn place_orders() -> Result<(), OrderingError> {
     // we don't actually need StaticRepository for this test
     // but using it to roughly illustrate its usage
     let statics = StaticRepository {
-        menu: vec![MenuItem {
-            id: Some(1),
-            name: "Pasta".to_string(),
-            cook_time: TimeDelta::minutes(5),
-        }]
+        menu: vec![RepoItem(
+            1,
+            MenuItem {
+                name: "Pasta".to_string(),
+                cook_time: TimeDelta::minutes(5),
+            },
+        )]
         .into(),
-        tables: vec![Table { id: Some(1) }].into(),
+        tables: vec![RepoItem(1, Table {})].into(),
     };
     let mut repo = OrderRepository::new();
 
@@ -31,38 +34,40 @@ fn place_orders() -> Result<(), OrderingError> {
         3,
     ))?;
 
+    let expected_table = RepoItem(1, Table {});
+    let expected_item = RepoItem(
+        1,
+        MenuItem {
+            name: "Pasta".to_string(),
+            cook_time: TimeDelta::minutes(5),
+        },
+    );
     assert_eq!(
         &[
-            ComparableOrder(Order {
-                id: Some(1),
-                table: &Table { id: Some(1) },
-                menu_item: &MenuItem {
-                    id: Some(1),
-                    name: "Pasta".to_string(),
-                    cook_time: TimeDelta::minutes(5)
-                },
-                time_placed: Utc::now()
-            }),
-            ComparableOrder(Order {
-                id: Some(2),
-                table: &Table { id: Some(1) },
-                menu_item: &MenuItem {
-                    id: Some(1),
-                    name: "Pasta".to_string(),
-                    cook_time: TimeDelta::minutes(5)
-                },
-                time_placed: Utc::now()
-            }),
-            ComparableOrder(Order {
-                id: Some(3),
-                table: &Table { id: Some(1) },
-                menu_item: &MenuItem {
-                    id: Some(1),
-                    name: "Pasta".to_string(),
-                    cook_time: TimeDelta::minutes(5)
-                },
-                time_placed: Utc::now()
-            }),
+            ComparableOrder(RepoItem(
+                1,
+                Order {
+                    table: &expected_table,
+                    menu_item: &expected_item,
+                    time_placed: Utc::now()
+                }
+            )),
+            ComparableOrder(RepoItem(
+                2,
+                Order {
+                    table: &expected_table,
+                    menu_item: &expected_item,
+                    time_placed: Utc::now()
+                }
+            )),
+            ComparableOrder(RepoItem(
+                3,
+                Order {
+                    table: &expected_table,
+                    menu_item: &expected_item,
+                    time_placed: Utc::now()
+                }
+            )),
         ][..],
         repo.orders().as_slice()
     );

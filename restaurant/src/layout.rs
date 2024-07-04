@@ -1,6 +1,7 @@
 use std::future::Future;
-
 use thiserror::Error;
+
+use crate::RepoItem;
 
 #[derive(Error, Debug)]
 pub enum LayoutError {
@@ -10,21 +11,19 @@ pub enum LayoutError {
 
 pub type Result<T> = std::result::Result<T, LayoutError>;
 #[derive(Debug)]
-pub struct Table {
-    pub id: Option<u32>,
-}
+pub struct Table {}
 
 pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
 pub trait TableRepository {
-    fn get_all(&self) -> impl Future<Output = RepoResult<Vec<Table>>> + Send;
+    fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoItem<Table>>>> + Send;
 
-    fn create(&mut self, item: Table) -> impl Future<Output = RepoResult<Table>> + Send;
-    fn remove(&mut self, item: Table) -> impl Future<Output = RepoResult<()>> + Send;
-    fn update(&mut self, item: Table) -> impl Future<Output = RepoResult<Table>> + Send;
+    fn create(&mut self, item: Table) -> impl Future<Output = RepoResult<RepoItem<Table>>> + Send;
+    fn remove(&mut self, item: RepoItem<Table>) -> impl Future<Output = RepoResult<()>> + Send;
+    fn update(&mut self, item: RepoItem<Table>) -> impl Future<Output = RepoResult<()>> + Send;
 }
 
-// see menu module for design notes
+// see menu module for design notes. not fully implementing because not necessary for this project.
 
-pub async fn get_tables<T: TableRepository>(repo: &T) -> Result<Vec<Table>> {
+pub async fn get_tables<T: TableRepository>(repo: &T) -> Result<Vec<RepoItem<Table>>> {
     repo.get_all().await.map_err(LayoutError::RepoOperation)
 }
