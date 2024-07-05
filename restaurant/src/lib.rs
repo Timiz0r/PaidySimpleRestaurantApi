@@ -2,8 +2,9 @@ use std::ops::{Deref, DerefMut};
 
 pub mod layout;
 pub mod menu;
-pub mod ordering;
+pub mod order;
 
+#[derive(Clone)]
 pub struct RepoItem<T>(pub u32, pub T);
 
 impl<T> RepoItem<T> {

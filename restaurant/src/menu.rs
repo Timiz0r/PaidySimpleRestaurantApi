@@ -2,8 +2,6 @@ use chrono::TimeDelta;
 use std::future::Future;
 use thiserror::Error;
 
-use crate::RepoItem;
-
 //TODO: want to try getting rid of the anyhow dependency
 //for this kind of application, it's fine, but, if possible, want to find a different way
 
@@ -17,30 +15,30 @@ pub enum MenuError {
 }
 
 type Result<T> = std::result::Result<T, MenuError>;
-#[derive(Debug)]
-pub struct MenuItem {
+#[derive(Debug, Clone)]
+pub struct Item {
     // considered having the name be the key
     // but that would make name changes awkward
     pub name: String,
     pub cook_time: TimeDelta,
 }
-pub type RepoMenuItem = RepoItem<MenuItem>;
+pub type RepoItem = crate::RepoItem<Item>;
 
 pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
 pub trait Repository {
-    fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoMenuItem>>> + Send;
-    fn get(&self, id: u32) -> impl Future<Output = RepoResult<RepoMenuItem>> + Send;
+    fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoItem>>> + Send;
+    fn get(&self, id: u32) -> impl Future<Output = RepoResult<RepoItem>> + Send;
 
-    fn create(&mut self, item: MenuItem) -> impl Future<Output = RepoResult<RepoMenuItem>> + Send;
-    fn remove(&mut self, item: RepoMenuItem) -> impl Future<Output = RepoResult<()>> + Send;
-    fn update(&mut self, item: RepoMenuItem) -> impl Future<Output = RepoResult<()>> + Send;
+    fn create(&mut self, item: Item) -> impl Future<Output = RepoResult<RepoItem>> + Send;
+    fn remove(&mut self, item: RepoItem) -> impl Future<Output = RepoResult<()>> + Send;
+    fn update(&mut self, item: RepoItem) -> impl Future<Output = RepoResult<()>> + Send;
 }
 
-pub async fn get<T: Repository>(repo: &T) -> Result<Vec<RepoMenuItem>> {
+pub async fn get<T: Repository>(repo: &T) -> Result<Vec<RepoItem>> {
     repo.get_all().await.map_err(MenuError::RepoOperation)
 }
 
-impl RepoMenuItem {
+impl RepoItem {
     // NOTE: would be a series of functions that encompass the types of operations we'd want for a menu
     // set_cook_time is implemented as an example, not that it would work without a fully implemented MenuRepository
 

@@ -48,6 +48,26 @@ For this system, the setup looks like this:
   * An implementation of the driven port that uses SQLite
   * Mocks and/or simulators for unit testing
 
+### Regarding `menu::Item::cook_time`
+This is likely insufficient. `ordering::Order` is modeled as having a quantity.
+Multiples of an item don't necessarily scale linearly, so this model doesn't truly capture the idea of cooking time.
+
+Idea:
+* `cook_time` -> `base_cooking_time`
+* Add `additional_time`
+* Add `max_batch_size` to indicate how many of an item can be cooked at once
+
+Granted, this still doesn't account for multiple tables' orders being cooked at once.
+It also doesn't account for orders being queued in a busy restaurant.
+Likely, the estimated time will be calculated by a future `order_queue` component that can use these values effectively.
+
+### `order::Order` doesn't use references
+This would have likely been obvious to someone experienced, but having references to `layout::Table` and `menu::Item`
+caused problems with lifetimes, as it ultimately creates circular references with `&mut self` calls to the repositories.
+
+Luckily, thinking about it, there shouldn't be much cloning in practice if there's some sort of DB/service in the middle,
+since data needs to be deserialized into fresh objects anyway.
+
 ### Miscellaneous
 * `anyhow` is currently being used on the repository traits because I haven't been able to find a more effective
   solution to the problem where repositories naturally will have their own custom errors to give.
@@ -55,3 +75,5 @@ For this system, the setup looks like this:
   to take another stab at it, time permitting.
 * We currently have a hard dependency on Utc::now(). While this won't have an impact for the duration of this project,
   it would be preferable, if possible, to consider a "clock" as a driven adapter. Will see if `chrono` has this later on.
+* `RepoItem<T>` was introduced, versus each item containing an `id: Some(u32)`,
+  to eliminate the awkwardness of figuring out if an item came from a repo or not. Now, it's inherent to the type.

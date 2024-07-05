@@ -10,7 +10,7 @@ pub enum LayoutError {
 }
 
 pub type Result<T> = std::result::Result<T, LayoutError>;
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Table {}
 pub type RepoTable = RepoItem<Table>;
 

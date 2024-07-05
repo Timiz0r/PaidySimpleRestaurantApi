@@ -1,41 +1,38 @@
 use restaurant::{
     layout::{self, RepoTable, Table},
-    menu::{self, MenuItem, RepoMenuItem},
-    RepoItem,
+    menu::{self, Item, RepoItem},
 };
 
-use super::Collection;
-
 pub(crate) struct StaticRepository {
-    pub menu: Collection<RepoMenuItem>,
-    pub tables: Collection<RepoTable>,
+    pub menu: Vec<RepoItem>,
+    pub tables: Vec<RepoTable>,
 }
 
 impl menu::Repository for StaticRepository {
-    async fn get_all(&self) -> menu::RepoResult<Vec<RepoMenuItem>> {
-        Ok(self.menu.clone().into())
+    async fn get_all(&self) -> menu::RepoResult<Vec<RepoItem>> {
+        Ok(self.menu.clone())
     }
 
-    async fn get(&self, _id: u32) -> menu::RepoResult<RepoMenuItem> {
+    async fn get(&self, _id: u32) -> menu::RepoResult<RepoItem> {
         unimplemented!()
     }
 
-    async fn create(&mut self, _item: MenuItem) -> menu::RepoResult<RepoMenuItem> {
+    async fn create(&mut self, _item: Item) -> menu::RepoResult<RepoItem> {
         unimplemented!()
     }
 
-    async fn remove(&mut self, _item: RepoMenuItem) -> menu::RepoResult<()> {
+    async fn remove(&mut self, _item: RepoItem) -> menu::RepoResult<()> {
         unimplemented!()
     }
 
-    async fn update(&mut self, _item: RepoMenuItem) -> menu::RepoResult<()> {
+    async fn update(&mut self, _item: RepoItem) -> menu::RepoResult<()> {
         unimplemented!()
     }
 }
 
 impl layout::TableRepository for StaticRepository {
     async fn get_all(&self) -> layout::RepoResult<Vec<RepoTable>> {
-        Ok(self.tables.clone().into())
+        Ok(self.tables.clone())
     }
 
     async fn create(&mut self, _item: Table) -> layout::RepoResult<RepoTable> {
@@ -48,29 +45,5 @@ impl layout::TableRepository for StaticRepository {
 
     async fn update(&mut self, _item: RepoTable) -> layout::RepoResult<()> {
         unimplemented!()
-    }
-}
-
-impl Clone for Collection<RepoMenuItem> {
-    fn clone(&self) -> Self {
-        Collection(
-            self.iter()
-                .map(|i| {
-                    RepoItem(
-                        i.id(),
-                        MenuItem {
-                            name: i.name.clone(),
-                            cook_time: i.cook_time,
-                        },
-                    )
-                })
-                .collect(),
-        )
-    }
-}
-
-impl Clone for Collection<RepoTable> {
-    fn clone(&self) -> Self {
-        Collection(self.iter().map(|i| RepoItem(i.id(), Table {})).collect())
     }
 }
