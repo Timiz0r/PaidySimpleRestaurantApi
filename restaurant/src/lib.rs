@@ -1,6 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 pub mod layout;
+pub mod mem_repo;
 pub mod menu;
 pub mod order;
 

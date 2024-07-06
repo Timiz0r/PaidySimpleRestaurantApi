@@ -3,6 +3,9 @@ use restaurant::{
     menu::{self, Item, RepoItem},
 };
 
+// these implementations predate InMemoryRepository. did not yet convert them over because the below
+// impl is sufficient and simpler
+
 pub(crate) struct StaticRepository {
     pub menu: Vec<RepoItem>,
     pub tables: Vec<RepoTable>,

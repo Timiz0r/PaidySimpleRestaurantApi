@@ -10,4 +10,4 @@ futures = "0.3.30"
 thiserror = "1.0.61"
 
 [dev-dependencies]
-pretty_assertions = { version="1.4.0", features = [ "unstable" ] }
+pretty_assertions = { version= "1.4.0" , features = [ "unstable" ] }
