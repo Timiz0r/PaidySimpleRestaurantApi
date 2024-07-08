@@ -23,7 +23,7 @@ impl OrderRepository {
 
 impl order::Repository for OrderRepository {
     async fn get_all(&self) -> order::RepoResult<Vec<RepoOrder>> {
-        self.repo.get_all().await.map_err(|e| anyhow::anyhow!(e))
+        self.repo.get_all().map_err(|e| anyhow::anyhow!(e))
     }
 
     async fn get_table(&self, table: layout::RepoTable) -> order::RepoResult<Vec<RepoOrder>> {
@@ -45,18 +45,18 @@ impl order::Repository for OrderRepository {
     }
 
     async fn get(&self, id: u32) -> order::RepoResult<RepoOrder> {
-        self.repo.get(id).await.map_err(|e| anyhow::anyhow!(e))
+        self.repo.get(id).map_err(|e| anyhow::anyhow!(e))
     }
 
     async fn create(&mut self, item: Order) -> order::RepoResult<RepoOrder> {
-        self.repo.create(item).await.map_err(|e| anyhow::anyhow!(e))
+        self.repo.create(item).map_err(|e| anyhow::anyhow!(e))
     }
 
     async fn remove(&mut self, item: RepoOrder) -> order::RepoResult<RepoOrder> {
-        self.repo.remove(item).await.map_err(|e| anyhow::anyhow!(e))
+        self.repo.remove(item).map_err(|e| anyhow::anyhow!(e))
     }
 
     async fn update(&mut self, item: RepoOrder) -> order::RepoResult<RepoOrder> {
-        self.repo.update(item).await.map_err(|e| anyhow::anyhow!(e))
+        self.repo.update(item).map_err(|e| anyhow::anyhow!(e))
     }
 }

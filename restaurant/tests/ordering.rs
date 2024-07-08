@@ -97,9 +97,9 @@ fn change_order_quantity() -> Result<(), OrderingError> {
         order::set_quantity(&mut repo, order2, 0).await?;
         order::set_quantity(&mut repo, order3, 7).await?;
 
-        let mut orders1 = order::get(&mut repo, table1.clone()).await?;
+        let mut orders1 = order::get(&repo, table1.clone()).await?;
         orders1.sort_by_key(|a| a.id());
-        let mut orders2 = order::get(&mut repo, table2.clone()).await?;
+        let mut orders2 = order::get(&repo, table2.clone()).await?;
         orders2.sort_by_key(|a| a.id());
 
         assert_eq!(
@@ -129,6 +129,30 @@ fn change_order_quantity() -> Result<(), OrderingError> {
             ))][..],
             orders2.as_slice()
         );
+
+        Ok(())
+    })
+}
+
+#[test]
+fn cancel_order() -> Result<(), OrderingError> {
+    let mut pool = LocalPool::new();
+    pool.run_until(async {
+        let table = RepoItem(1, layout::Table {});
+        let item = RepoItem(
+            1,
+            menu::Item {
+                name: "Pasta".to_string(),
+                cook_time: TimeDelta::minutes(5),
+            },
+        );
+        let mut repo = OrderRepository::new();
+        let order = order::place(&mut repo, table.clone(), item, 12).await?;
+        order::cancel(&mut repo, order).await?;
+
+        if let Ok(orders) = order::get(&repo, table).await {
+            assert!(orders.is_empty(), "Orders found.")
+        };
 
         Ok(())
     })

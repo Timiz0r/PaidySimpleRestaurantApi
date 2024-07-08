@@ -83,6 +83,10 @@ as they're done. Having each item in its own order is probably most convenient h
 The current modeling of the service supports this scenario, and clients need only use the service in this way.
 Or they can just decrement the quantity as items are done.
 
+That being said, I'm not against ditching `set_quantity`, adding `complete_items` to reduce the quantity,
+and only allowing adding items by creating new orders. It's less flexible but easier to reason about, and,
+if "cutting in line" is important, implementing an `order_queue` as mentioned above would probably be better anyway.
+
 ### Idempotency
 To keep things simple enough for this exercise...
 * The web service is where this is handled via caching and a client id. 
@@ -94,6 +98,18 @@ To keep things simple enough for this exercise...
 
 Side-note: these kinds of problems are why I like event-sourcing!
 
+### `order::Repository` doesn't know about the other `layout` and `menu` repositories
+As far as the application is designed, all of these repos are separate. For instance, when asking the order repo for
+all of the orders for a table, there's nothing in the design to say if an Err or an empty Vec should be returned.
+
+This isn't much of a design issue, since, if an `order::Repository` implementation needs to be given information about
+tables, it can be given it without consideration for the overall design.
+
+Still, it could be argued that having a singular `RestaurantRepository` is the better way to model it. Design is fun!
+
+### API Versioning
+Left it out of this exercise.
+
 ### Miscellaneous
 * `anyhow` is currently being used on the repository traits because I haven't been able to find a more effective
   solution to the problem where repositories naturally will have their own custom errors to give.
@@ -103,3 +119,6 @@ Side-note: these kinds of problems are why I like event-sourcing!
   it would be preferable, if possible, to consider a "clock" as a driven adapter. Will see if `chrono` has this later on.
 * `RepoItem<T>` was introduced, versus each item containing an `id: Some(u32)`,
   to eliminate the awkwardness of figuring out if an item came from a repo or not. Now, it's inherent to the type.
+* `The application MUST, upon query request, show a specified item for a specified table number.`...  
+  Since I modeled individual orders as having a quantity, versus having an order for each item,
+  I believe the call to get all items for a table is sufficient and therefore have not added the above.

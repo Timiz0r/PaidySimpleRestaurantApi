@@ -35,7 +35,7 @@ pub trait Repository {
     fn update(&mut self, item: RepoOrder) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
 }
 
-pub async fn get<T: Repository>(repo: &mut T, table: layout::RepoTable) -> Result<Vec<RepoOrder>> {
+pub async fn get<T: Repository>(repo: &T, table: layout::RepoTable) -> Result<Vec<RepoOrder>> {
     repo.get_table(table)
         .await
         .map_err(OrderingError::RepoOperation)
@@ -63,7 +63,7 @@ pub async fn set_quantity<T: Repository>(
     quantity: u32,
 ) -> Result<RepoOrder> {
     if quantity == 0 {
-        return remove(repo, order).await;
+        return cancel(repo, order).await;
     }
 
     repo.update(order)
@@ -71,7 +71,7 @@ pub async fn set_quantity<T: Repository>(
         .map_err(OrderingError::RepoOperation)
 }
 
-pub async fn remove<T: Repository>(repo: &mut T, order: RepoOrder) -> Result<RepoOrder> {
+pub async fn cancel<T: Repository>(repo: &mut T, order: RepoOrder) -> Result<RepoOrder> {
     repo.remove(order)
         .await
         .map_err(OrderingError::RepoOperation)
