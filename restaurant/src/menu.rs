@@ -53,8 +53,12 @@ pub trait Repository {
     fn update(&mut self, item: RepoItem) -> impl Future<Output = RepoResult<()>> + Send;
 }
 
-pub async fn get<T: Repository>(repo: &T) -> Result<Vec<RepoItem>> {
+pub async fn get_all<T: Repository>(repo: &T) -> Result<Vec<RepoItem>> {
     repo.get_all().await.map_err(MenuError::RepoOperation)
+}
+
+pub async fn get<T: Repository>(repo: &T, id: Id) -> Result<RepoItem> {
+    repo.get(id).await.map_err(MenuError::RepoOperation)
 }
 
 impl RepoItem {
@@ -73,5 +77,9 @@ impl RepoItem {
             // we map_err for future-proofing, in case we use anyhow in other errors
             repo.update(self).await.map_err(MenuError::RepoOperation)
         }
+    }
+
+    pub async fn get<T: Repository>(&self, repo: &T, id: Id) -> Result<RepoItem> {
+        repo.get(id).await.map_err(MenuError::RepoOperation)
     }
 }

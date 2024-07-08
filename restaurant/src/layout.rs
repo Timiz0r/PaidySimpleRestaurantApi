@@ -44,3 +44,7 @@ pub trait TableRepository {
 pub async fn get_tables<T: TableRepository>(repo: &T) -> Result<Vec<RepoTable>> {
     repo.get_all().await.map_err(LayoutError::RepoOperation)
 }
+
+pub async fn get<T: TableRepository>(repo: &T, id: TableId) -> Result<RepoTable> {
+    repo.get(id).await.map_err(LayoutError::RepoOperation)
+}

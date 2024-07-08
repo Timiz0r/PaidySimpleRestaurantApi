@@ -48,21 +48,6 @@ For this system, the setup looks like this:
   * An implementation of the driven port that uses SQLite
   * Mocks and/or simulators for unit testing
 
-### Regarding `menu::Item::cook_time`
-This is likely insufficient. `ordering::Order` is modeled as having a quantity.
-Multiples of an item don't necessarily scale linearly, so this model doesn't truly capture the idea of cooking time.
-
-Idea:
-* `cook_time` -> `base_cooking_time`
-* Add `additional_time`
-* Add `max_batch_size` to indicate how many of an item can be cooked at once
-
-Granted, this still doesn't account for multiple tables' orders being cooked at once.
-It also doesn't account for orders being queued in a busy restaurant.
-Likely, the estimated duration will be calculated by a future `order_queue` component that can use these values effectively.
-
-Additionally, since the client is driven by employees, we can allow them to input a custom estimated duration.
-
 ### `order::Order` doesn't use references
 This would have likely been obvious to someone experienced, but having references to `layout::Table` and `menu::Item`
 caused problems with lifetimes, as it ultimately creates circular references with `&mut self` calls to the repositories.
@@ -87,17 +72,6 @@ That being said, I'm not against ditching `set_quantity`, adding `complete_items
 and only allowing adding items by creating new orders. It's less flexible but easier to reason about, and,
 if "cutting in line" is important, implementing an `order_queue` as mentioned above would probably be better anyway.
 
-### Idempotency
-To keep things simple enough for this exercise...
-* The web service is where this is handled via caching and a client id. 
-* Cache is in-memory, which certainly wouldn't work for distributed systems.
-* I'm not actually deeply familiar with doing it this way.
-  It seems to me that failing (as opposed to not in the cache) to read from or write to the cache would break idempotency.
-  Perhaps this is considered acceptable for many cases? For critical cases like those dealing with payments,
-  there are other techniques, so I'm pretty okay with this.
-
-Side-note: these kinds of problems are why I like event-sourcing!
-
 ### `order::Repository` doesn't know about the other `layout` and `menu` repositories
 As far as the application is designed, all of these repos are separate. For instance, when asking the order repo for
 all of the orders for a table, there's nothing in the design to say if an Err or an empty Vec should be returned.
@@ -107,8 +81,13 @@ tables, it can be given it without consideration for the overall design.
 
 Still, it could be argued that having a singular `RestaurantRepository` is the better way to model it. Design is fun!
 
-### API Versioning
-Left it out of this exercise.
+### API Versioning, extra Path extraction
+I tend to prefer versioning via a header, and it was rather obnoxious to hook it up,
+though I'm sure there's a better way.
+
+A side-effect of the current employed method is that there's always an extra path extracted
+thanks to the initial wildcard. It's something I'll fix in my free time even after submitting the code,
+but it's not particularly important for this exercise.
 
 ### Miscellaneous
 * `anyhow` is currently being used on the repository traits because I haven't been able to find a more effective
@@ -122,3 +101,38 @@ Left it out of this exercise.
 * `The application MUST, upon query request, show a specified item for a specified table number.`...  
   Since I modeled individual orders as having a quantity, versus having an order for each item,
   I believe the call to get all items for a table is sufficient and therefore have not added the above.
+
+## Things I didn't have time for
+### Idempotency
+To keep things timeboxed, I didn't end up getting to this. If I did get around to it...
+* The web service is where this is handled via caching and a client id. 
+* Cache is in-memory, which certainly wouldn't work for distributed systems.
+* I'm not actually deeply familiar with doing it this way.
+  It seems to me that failing (as opposed to not in the cache) to read from or write to the cache would break idempotency.
+  Perhaps this is considered acceptable for many cases? For critical cases like those dealing with payments,
+  there are other techniques, so I'm pretty okay with this.
+
+Side-note: these kinds of problems are why I like event-sourcing!
+
+### HTTP error results
+It's currently plaintext and would ideally be something more structured.
+
+### Regarding `menu::Item::cook_time`
+This is likely insufficient. `ordering::Order` is modeled as having a quantity.
+Multiples of an item don't necessarily scale linearly, so this model doesn't truly capture the idea of cooking time.
+
+Idea:
+* `cook_time` -> `base_cooking_time`
+* Add `additional_time`
+* Add `max_batch_size` to indicate how many of an item can be cooked at once
+
+Granted, this still doesn't account for multiple tables' orders being cooked at once.
+It also doesn't account for orders being queued in a busy restaurant.
+Likely, the estimated duration will be calculated by a future `order_queue` component that can use these values effectively.
+
+Additionally, since the client is driven by employees, we can allow them to input a custom estimated duration.
+
+### Always using separate structs on web api-side
+It's what I'd normally prefer, really just because it's most obvious what gets sent through the API
+(aka no secrets or internal data).
+There's a greater than zero percent change that I got around to it and forgot to delete this.

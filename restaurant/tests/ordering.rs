@@ -5,7 +5,6 @@ use pretty_assertions::assert_eq;
 use restaurant::layout::{self};
 use restaurant::memdb::Database;
 use restaurant::menu;
-use restaurant::order::Repository;
 use restaurant::{
     order::{self, OrderingError},
     RepoItem,
@@ -33,8 +32,10 @@ fn place_orders() -> Result<(), OrderingError> {
 
         let table = layout::TableRepository::get(&db, layout::TableId(1))
             .await
-            .unwrap();
-        let item = menu::Repository::get(&db, menu::Id(1)).await.unwrap();
+            .expect("Table 1 should exist");
+        let item = menu::Repository::get(&db, menu::Id(1))
+            .await
+            .expect("Item 1 should exist");
         order::place(&mut db, table.id(), item.id(), 3).await?;
 
         assert_eq!(
@@ -47,7 +48,10 @@ fn place_orders() -> Result<(), OrderingError> {
                     quantity: 3
                 }
             )),][..],
-            db.get_all().await.unwrap().as_slice()
+            order::Repository::get_all(&db)
+                .await
+                .expect("Getting all orders should not fail.")
+                .as_slice()
         );
 
         Ok(())

@@ -7,7 +7,7 @@ pub fn create() -> Router {
 }
 
 async fn get_all(Extension(db): Extension<Database>) -> Result<impl IntoResponse, StatusCode> {
-    menu::get(&db)
+    menu::get_all(&db)
         .await
         .map(Json)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)

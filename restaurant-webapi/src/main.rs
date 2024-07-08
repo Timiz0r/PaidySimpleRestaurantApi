@@ -1,6 +1,6 @@
 use axum::{
     body::Body, extract::Request, http::StatusCode, response::Response, routing::any, Extension,
-    RequestPartsExt, Router,
+    Router,
 };
 use restaurant::{layout, memdb::Database, menu};
 use tower::{Service, ServiceBuilder};
@@ -25,13 +25,12 @@ async fn main() {
                 Ok(Response::builder()
                     .status(StatusCode::NOT_FOUND)
                     .body(Body::from("Set 'x-api-version' header."))
-                    .unwrap())
+                    .expect("Build response should be well-formed."))
             }
         })
         .layer(ServiceBuilder::new().layer(Extension(create_database()))),
     );
 
-    // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind(
         std::env::args()
             .nth(1)
@@ -43,7 +42,7 @@ async fn main() {
 }
 
 fn create_database() -> Database {
-    let tables = (1..15)
+    let tables = (1..101)
         .map(|id| layout::RepoTable::new(id.into(), layout::Table {}))
         .collect();
     let menu = vec![
