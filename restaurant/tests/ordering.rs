@@ -36,14 +36,14 @@ fn place_orders() -> Result<(), OrderingError> {
         let item = menu::Repository::get(&db, menu::Id(1))
             .await
             .expect("Item 1 should exist");
-        order::place(&mut db, table.id(), item.id(), 3).await?;
+        order::place(&mut db, table.clone(), item.clone(), 3).await?;
 
         assert_eq!(
             &[ComparableOrder(RepoItem::new(
                 1.into(),
                 order::Order {
-                    table_id: 1.into(),
-                    menu_item_id: 1.into(),
+                    table: table.clone(),
+                    menu_item: item.clone(),
                     time_placed: Utc::now(),
                     quantity: 3
                 }
@@ -86,7 +86,7 @@ fn change_order_quantity() -> Result<(), OrderingError> {
             item: &menu::RepoItem,
             quantity: u32,
         ) -> order::Result<(order::Id, order::RepoOrder)> {
-            order::place(db, table.id(), item.id(), quantity)
+            order::place(db, table.clone(), item.clone(), quantity)
                 .await
                 .map(|o| (o.id(), o))
         }
@@ -109,8 +109,8 @@ fn change_order_quantity() -> Result<(), OrderingError> {
             &[ComparableOrder(RepoItem::new(
                 id1,
                 order::Order {
-                    table_id: table1.id(),
-                    menu_item_id: pasta.id(),
+                    table: table1.clone(),
+                    menu_item: pasta.clone(),
                     quantity: 1,
                     time_placed: Utc::now()
                 }
@@ -123,8 +123,8 @@ fn change_order_quantity() -> Result<(), OrderingError> {
             &[ComparableOrder(RepoItem::new(
                 id3,
                 order::Order {
-                    table_id: table2.id(),
-                    menu_item_id: sandwich.id(),
+                    table: table2.clone(),
+                    menu_item: sandwich.clone(),
                     quantity: 7,
                     time_placed: Utc::now()
                 }
@@ -149,7 +149,7 @@ fn cancel_order() -> Result<(), OrderingError> {
             },
         );
         let mut db = Database::default();
-        let order = order::place(&mut db, table.id(), item.id(), 12).await?;
+        let order = order::place(&mut db, table.clone(), item.clone(), 12).await?;
         order::cancel(&mut db, order.id()).await?;
 
         if let Ok(orders) = order::get_table(&db, table.id()).await {

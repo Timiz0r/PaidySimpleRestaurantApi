@@ -18,8 +18,8 @@ pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Order {
-    pub table_id: layout::TableId,
-    pub menu_item_id: menu::Id,
+    pub table: layout::RepoTable,
+    pub menu_item: menu::RepoItem,
     pub time_placed: DateTime<Utc>,
     pub quantity: u32,
 }
@@ -63,13 +63,13 @@ pub async fn get_table<T: Repository>(
 
 pub async fn place<T: Repository>(
     repo: &mut T,
-    table: layout::TableId,
-    item: menu::Id,
+    table: layout::RepoTable,
+    item: menu::RepoItem,
     quantity: u32,
 ) -> Result<RepoOrder> {
     repo.create(Order {
-        table_id: table,
-        menu_item_id: item,
+        table,
+        menu_item: item,
         time_placed: Utc::now(),
         quantity,
     })

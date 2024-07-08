@@ -34,23 +34,25 @@ async fn orders_post(
         layout::get(&db, order.table_id).await,
         menu::get(&db, order.item_id).await,
     ) {
-        (Ok(_), Ok(_)) => order::place(&mut db, order.table_id, order.item_id, order.quantity)
-            .await
-            .map(Json)
-            .map_err(|e| {
-                // TODO: to make things more readable, shoving these in a tuple struct should hopefully work
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to create order: {:?}", e),
-                )
-            }),
+        (Ok(table), Ok(item)) => {
+            order::place(&mut db, table, item, order.quantity)
+                .await
+                .map(Json)
+                .map_err(|e| {
+                    // TODO: to make things more readable, shoving these in a tuple struct should hopefully work
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Failed to create order: {:?}", e),
+                    )
+                })
+        }
         (Ok(_), Err(_)) => Err((
             (StatusCode::BAD_REQUEST),
-            format!("Table '{:?}' not found.", order.table_id),
+            format!("Menu item '{:?}' not found.", order.item_id),
         )),
         (Err(_), Ok(_)) => Err((
             (StatusCode::BAD_REQUEST),
-            format!("Menu item '{:?}' not found.", order.item_id),
+            format!("Table '{:?}' not found.", order.table_id),
         )),
         (Err(_), Err(_)) => Err((
             (StatusCode::BAD_REQUEST),
@@ -76,29 +78,6 @@ async fn table_orders_get(
     Extension(db): Extension<Database>,
     Path((_, table_id)): Path<(String, layout::TableId)>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    // rather than many repo calls, we'll just get them all,
-    // since a restaurant probably doesn't have many menu items
-    // could also turn it into a map if necessary
-    let menu = match menu::get_all(&db).await {
-        Ok(menu) => menu,
-        Err(e) => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to get menu: {:?}", e),
-            ));
-        }
-    };
-
-    let table = match layout::get(&db, table_id).await {
-        Ok(table) => table,
-        Err(e) => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to find table '{:?}': {:?}", table_id, e),
-            ));
-        }
-    };
-
     let orders = match order::get_table(&db, table_id).await {
         Ok(orders) => orders,
         Err(e) => {
@@ -109,43 +88,17 @@ async fn table_orders_get(
         }
     };
 
-    // what should we do in this case? it's actually a case for denormalization of stored orders,
-    // since there's probably no legitimate scenario where we want orders auto-removed when associated
-    // menu items are removed. staff could always just remove the item in the off chance this happens.
-    //
-    // the problem is that, in the current design, order::Repository wants a menu::Id and has no other way to
-    // turn it into full menu::Items.
-    // TODO: could be doable. give it a try.
-    let missing_items: Vec<String> = orders
-        .iter()
-        .filter(|o| !menu.iter().any(|i| i.id() == o.menu_item_id))
-        .map(|o| format!("order '{:?}', menu item '{:?}", o.id(), o.menu_item_id))
-        .collect();
-    if !missing_items.is_empty() {
-        return Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!(
-                "The following orders have missing menu items: {}",
-                missing_items.join("; ")
-            ),
-        ));
-    }
-
     Ok(Json(
         orders
             .iter()
             .map(|o| {
-                let item = menu
-                    .iter()
-                    .find(|i| i.id() == o.menu_item_id)
-                    .expect("Verified to exist.");
-                let remaining = TimeDelta::minutes(item.item().cook_time.0.into())
+                let remaining = TimeDelta::minutes(o.menu_item.cook_time.0.into())
                     - (Utc::now() - o.time_placed);
 
                 OrderDetails {
                     id: o.id(),
-                    table: table.clone(),
-                    item: item.clone(),
+                    table: o.table.clone(),
+                    item: o.menu_item.clone(),
                     time_placed: o.time_placed,
                     quantity: o.quantity,
                     estimated_minutes_remaining: menu::Minutes(

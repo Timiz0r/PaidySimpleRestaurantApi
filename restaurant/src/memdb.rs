@@ -274,7 +274,7 @@ impl order::Repository for Database {
             .unwrap()
             .items()
             .iter()
-            .filter(|o| o.table_id == table_id)
+            .filter(|o| o.table.id() == table_id)
             .cloned()
             .collect::<Vec<order::RepoOrder>>();
         Ok(results)

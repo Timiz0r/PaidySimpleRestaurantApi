@@ -9,8 +9,8 @@ pub(crate) struct ComparableOrder(pub order::RepoOrder);
 impl PartialEq<order::RepoOrder> for ComparableOrder {
     fn eq(&self, other: &order::RepoOrder) -> bool {
         self.0.id() == other.id()
-            && self.0.table_id == other.table_id
-            && self.0.menu_item_id == other.menu_item_id
+            && self.0.table.id() == other.table.id()
+            && self.0.menu_item.id() == other.menu_item.id()
         // TODO: see if we can make a clock a driven port
     }
 }
