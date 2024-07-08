@@ -3,23 +3,23 @@ use std::ops::{Deref, DerefMut};
 use serde::Serialize;
 
 pub mod layout;
-pub mod mem_repo;
+pub mod memdb;
 pub mod menu;
 pub mod order;
 
 #[derive(Clone, Serialize)]
-pub struct RepoItem<T> {
-    id: u32,
+pub struct RepoItem<T, I: Copy + Clone + Serialize> {
+    id: I,
 
     #[serde(flatten)]
     item: T,
 }
 
-impl<T> RepoItem<T> {
-    pub fn new(id: u32, item: T) -> RepoItem<T> {
+impl<T, I: Copy + Clone + Serialize> RepoItem<T, I> {
+    pub fn new(id: I, item: T) -> RepoItem<T, I> {
         RepoItem { id, item }
     }
-    pub fn id(&self) -> u32 {
+    pub fn id(&self) -> I {
         self.id
     }
     pub fn item(&self) -> &T {
@@ -30,7 +30,7 @@ impl<T> RepoItem<T> {
     }
 }
 
-impl<T> Deref for RepoItem<T> {
+impl<T, I: Copy + Clone + Serialize> Deref for RepoItem<T, I> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -38,13 +38,13 @@ impl<T> Deref for RepoItem<T> {
     }
 }
 
-impl<T> DerefMut for RepoItem<T> {
+impl<T, I: Copy + Clone + Serialize> DerefMut for RepoItem<T, I> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.item
     }
 }
 
-impl<T: std::fmt::Debug> std::fmt::Debug for RepoItem<T> {
+impl<T: std::fmt::Debug, I: Copy + Clone + Serialize> std::fmt::Debug for RepoItem<T, I> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&**self, f)
     }

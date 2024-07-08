@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::future::Future;
 use thiserror::Error;
 
@@ -13,11 +13,12 @@ pub enum MenuError {
     #[error("Item '{item_name}' lacks an id and so cannot be mapped to repository.")]
     NoId { item_name: String },
 }
+type Result<T> = std::result::Result<T, MenuError>;
+pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Minutes(pub u32);
 
-type Result<T> = std::result::Result<T, MenuError>;
 #[derive(Debug, Clone, Serialize)]
 pub struct Item {
     // considered having the name be the key
@@ -27,15 +28,23 @@ pub struct Item {
     // in practice, basically every individual item in a restaurant should cook in minutes, so this actually works well
     pub cook_time: Minutes,
 }
-pub type RepoItem = crate::RepoItem<Item>;
 
-pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct Id(pub u32);
+impl From<u32> for Id {
+    fn from(value: u32) -> Self {
+        Id(value)
+    }
+}
+
+pub type RepoItem = crate::RepoItem<Item, Id>;
+
 pub trait Repository {
     fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoItem>>> + Send;
-    fn get(&self, id: u32) -> impl Future<Output = RepoResult<RepoItem>> + Send;
+    fn get(&self, id: Id) -> impl Future<Output = RepoResult<RepoItem>> + Send;
 
     fn create(&mut self, item: Item) -> impl Future<Output = RepoResult<RepoItem>> + Send;
-    fn remove(&mut self, item: RepoItem) -> impl Future<Output = RepoResult<()>> + Send;
+    fn remove(&mut self, id: Id) -> impl Future<Output = RepoResult<()>> + Send;
     fn update(&mut self, item: RepoItem) -> impl Future<Output = RepoResult<()>> + Send;
 }
 

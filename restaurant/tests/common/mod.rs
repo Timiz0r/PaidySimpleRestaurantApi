@@ -1,22 +1,16 @@
-mod order_repository;
-mod static_repository;
-
 use std::fmt::{self, Debug};
 
-pub(crate) use order_repository::*;
 use restaurant::order;
-// these arent currently used, but implemented it to see what the complete impl would look like
-pub(crate) use static_repository::*;
 
 pub(crate) struct ComparableOrder(pub order::RepoOrder);
 
 // would be obnoxious to maintain all the fields, so just trust id
 // not currently implementing PartialEq for these types because they aren't meant to be =='d, but we could do it anyway
-impl PartialEq<restaurant::RepoItem<order::Order>> for ComparableOrder {
+impl PartialEq<order::RepoOrder> for ComparableOrder {
     fn eq(&self, other: &order::RepoOrder) -> bool {
         self.0.id() == other.id()
-            && self.0.table.id() == other.table.id()
-            && self.0.menu_item.id() == other.menu_item.id()
+            && self.0.table_id == other.table_id
+            && self.0.menu_item_id == other.menu_item_id
         // TODO: see if we can make a clock a driven port
     }
 }

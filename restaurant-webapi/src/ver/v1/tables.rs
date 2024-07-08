@@ -4,11 +4,11 @@ use restaurant::layout;
 use crate::Database;
 
 pub fn create() -> Router {
-    Router::new().route("/", get(get_all))
+    Router::new().route("/", get(tables_get))
 }
 
-async fn get_all(Extension(repo): Extension<Database>) -> Result<impl IntoResponse, StatusCode> {
-    layout::get_tables(&repo)
+async fn tables_get(Extension(db): Extension<Database>) -> Result<impl IntoResponse, StatusCode> {
+    layout::get_tables(&db)
         .await
         .map(Json)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)

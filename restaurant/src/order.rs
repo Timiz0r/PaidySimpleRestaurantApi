@@ -1,7 +1,7 @@
 use crate::{layout, menu, RepoItem};
 use chrono::{DateTime, Utc};
 use futures::Future;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 // TODO: concurrent collections
@@ -10,33 +10,44 @@ use thiserror::Error;
 pub enum OrderingError {
     #[error("An error occurred when interacting with the repository.")]
     RepoOperation(#[from] anyhow::Error),
+    #[error("Unable to find order {0:?}")]
+    OrderNotFound(Id),
 }
-
 pub type Result<T> = std::result::Result<T, OrderingError>;
+pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Order {
-    pub table: layout::RepoTable,
-    pub menu_item: menu::RepoItem,
+    pub table_id: layout::TableId,
+    pub menu_item_id: menu::Id,
     pub time_placed: DateTime<Utc>,
     pub quantity: u32,
 }
-pub type RepoOrder = RepoItem<Order>;
 
-pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Id(pub u32);
+impl From<u32> for Id {
+    fn from(value: u32) -> Self {
+        Id(value)
+    }
+}
+
+pub type RepoOrder = RepoItem<Order, Id>;
+
 pub trait Repository {
     fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoOrder>>> + Send;
     fn get_table(
         &self,
-        table: layout::RepoTable,
+        table: layout::TableId,
     ) -> impl Future<Output = RepoResult<Vec<RepoOrder>>> + Send;
-    fn get(&self, id: u32) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
+    fn get(&self, id: Id) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
 
     fn create(&mut self, item: Order) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
-    fn remove(&mut self, item: RepoOrder) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
+    fn remove(&mut self, id: Id) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
     fn update(&mut self, item: RepoOrder) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
 }
 
-pub async fn get<T: Repository>(repo: &T, table: layout::RepoTable) -> Result<Vec<RepoOrder>> {
+pub async fn get_table<T: Repository>(repo: &T, table: layout::TableId) -> Result<Vec<RepoOrder>> {
     repo.get_table(table)
         .await
         .map_err(OrderingError::RepoOperation)
@@ -44,13 +55,13 @@ pub async fn get<T: Repository>(repo: &T, table: layout::RepoTable) -> Result<Ve
 
 pub async fn place<T: Repository>(
     repo: &mut T,
-    table: layout::RepoTable,
-    item: menu::RepoItem,
+    table: layout::TableId,
+    item: menu::Id,
     quantity: u32,
 ) -> Result<RepoOrder> {
     repo.create(Order {
-        table,
-        menu_item: item,
+        table_id: table,
+        menu_item_id: item,
         time_placed: Utc::now(),
         quantity,
     })
@@ -58,21 +69,21 @@ pub async fn place<T: Repository>(
     .map_err(OrderingError::RepoOperation)
 }
 
-pub async fn set_quantity<T: Repository>(
-    repo: &mut T,
-    order: RepoOrder,
-    quantity: u32,
-) -> Result<RepoOrder> {
+pub async fn set_quantity<T: Repository>(repo: &mut T, id: Id, quantity: u32) -> Result<RepoOrder> {
     if quantity == 0 {
-        return cancel(repo, order).await;
+        return cancel(repo, id).await;
     }
 
-    repo.update(order)
-        .await
-        .map_err(OrderingError::RepoOperation)
+    if let Ok(order) = repo.get(id).await {
+        repo.update(order)
+            .await
+            .map_err(OrderingError::RepoOperation)
+    } else {
+        Err(OrderingError::OrderNotFound(id))
+    }
 }
 
-pub async fn cancel<T: Repository>(repo: &mut T, order: RepoOrder) -> Result<RepoOrder> {
+pub async fn cancel<T: Repository>(repo: &mut T, order: Id) -> Result<RepoOrder> {
     repo.remove(order)
         .await
         .map_err(OrderingError::RepoOperation)
