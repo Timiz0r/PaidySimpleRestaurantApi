@@ -3,7 +3,7 @@ use axum::{http::StatusCode, response::IntoResponse, routing::get, Extension, Js
 use restaurant::menu;
 
 pub fn create() -> Router {
-    Router::new().route("/", get(get_all))
+    Router::new().route("/menu_items", get(get_all))
 }
 
 async fn get_all(Extension(db): Extension<Database>) -> Result<impl IntoResponse, StatusCode> {

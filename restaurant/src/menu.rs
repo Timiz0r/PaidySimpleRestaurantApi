@@ -29,11 +29,16 @@ pub struct Item {
     pub cook_time: Minutes,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Id(pub u32);
 impl From<u32> for Id {
     fn from(value: u32) -> Self {
         Id(value)
+    }
+}
+impl From<Id> for u32 {
+    fn from(value: Id) -> Self {
+        value.0
     }
 }
 

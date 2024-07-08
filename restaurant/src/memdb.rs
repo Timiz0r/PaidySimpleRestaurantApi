@@ -81,15 +81,13 @@ pub trait IdGenerator<I: Copy> {
 }
 
 struct IdGeneratorImpl {
-    table: AtomicU32,
-    menu: AtomicU32,
-    order: AtomicU32,
+    counter: AtomicU32,
 }
 
 impl IdGenerator<layout::TableId> for IdGeneratorImpl {
     fn get(&self) -> layout::TableId {
         layout::TableId(
-            self.table
+            self.counter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed),
         )
     }
@@ -97,14 +95,17 @@ impl IdGenerator<layout::TableId> for IdGeneratorImpl {
 
 impl IdGenerator<menu::Id> for IdGeneratorImpl {
     fn get(&self) -> menu::Id {
-        menu::Id(self.menu.fetch_add(1, std::sync::atomic::Ordering::Relaxed))
+        menu::Id(
+            self.counter
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+        )
     }
 }
 
 impl IdGenerator<order::Id> for IdGeneratorImpl {
     fn get(&self) -> order::Id {
         order::Id(
-            self.order
+            self.counter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed),
         )
     }
@@ -113,9 +114,15 @@ impl IdGenerator<order::Id> for IdGeneratorImpl {
 impl Default for IdGeneratorImpl {
     fn default() -> Self {
         Self {
-            table: AtomicU32::new(1),
-            menu: AtomicU32::new(1),
-            order: AtomicU32::new(1),
+            counter: AtomicU32::new(1),
+        }
+    }
+}
+
+impl IdGeneratorImpl {
+    fn new(start: u32) -> IdGeneratorImpl {
+        IdGeneratorImpl {
+            counter: AtomicU32::new(start),
         }
     }
 }
@@ -164,18 +171,33 @@ impl Database {
         tables: Vec<layout::RepoTable>,
         orders: Vec<order::RepoOrder>,
     ) -> Database {
+        fn start_id<T, I: Copy + Serialize + PartialOrd + Ord + From<u32> + Into<u32>>(
+            items: &[RepoItem<T, I>],
+        ) -> I {
+            items
+                .iter()
+                .max_by_key(|i| i.id())
+                .map(|i| (i.id().into() + 1).into())
+                .unwrap_or(1.into())
+        }
+
+        // couldn't find a good way to do these generically
+        // mainly because IdGeneratorImpl only implements its trait for types
         Database {
             menu: Arc::new(RwLock::new(InMemoryRepository {
+                ids: menu.iter().map(|i| i.id()).collect(),
+                idgen: Box::new(IdGeneratorImpl::new(start_id(&menu).into())),
                 items: menu,
-                ..Default::default()
             })),
             tables: Arc::new(RwLock::new(InMemoryRepository {
+                ids: tables.iter().map(|i| i.id()).collect(),
+                idgen: Box::new(IdGeneratorImpl::new(start_id(&tables).into())),
                 items: tables,
-                ..Default::default()
             })),
             orders: Arc::new(RwLock::new(InMemoryRepository {
+                ids: orders.iter().map(|i| i.id()).collect(),
+                idgen: Box::new(IdGeneratorImpl::new(start_id(&orders).into())),
                 items: orders,
-                ..Default::default()
             })),
         }
     }
@@ -255,14 +277,7 @@ impl order::Repository for Database {
             .filter(|o| o.table_id == table_id)
             .cloned()
             .collect::<Vec<order::RepoOrder>>();
-        if results.is_empty() {
-            Err(anyhow::anyhow!(
-                "No orders found for table '{:?}'.",
-                table_id
-            ))
-        } else {
-            Ok(results)
-        }
+        Ok(results)
     }
 
     async fn get(&self, id: order::Id) -> order::RepoResult<order::RepoOrder> {

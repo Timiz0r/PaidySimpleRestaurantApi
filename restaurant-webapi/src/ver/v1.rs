@@ -8,9 +8,9 @@ mod tables;
 
 pub fn create() -> VersionedApi {
     let router = Router::new()
-        .nest("/orders", orders::create())
-        .nest("/menu_items", menu_items::create())
-        .nest("/tables", tables::create());
+        .merge(orders::create())
+        .merge(menu_items::create())
+        .merge(tables::create());
 
     VersionedApi::new("v1", router)
 }

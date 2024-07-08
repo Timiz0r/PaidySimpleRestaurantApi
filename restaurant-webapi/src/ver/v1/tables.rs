@@ -4,7 +4,7 @@ use restaurant::layout;
 use crate::Database;
 
 pub fn create() -> Router {
-    Router::new().route("/", get(tables_get))
+    Router::new().route("/tables", get(tables_get))
 }
 
 async fn tables_get(Extension(db): Extension<Database>) -> Result<impl IntoResponse, StatusCode> {

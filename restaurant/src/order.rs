@@ -31,6 +31,11 @@ impl From<u32> for Id {
         Id(value)
     }
 }
+impl From<Id> for u32 {
+    fn from(value: Id) -> Self {
+        value.0
+    }
+}
 
 pub type RepoOrder = RepoItem<Order, Id>;
 
@@ -47,8 +52,11 @@ pub trait Repository {
     fn update(&mut self, item: RepoOrder) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
 }
 
-pub async fn get_table<T: Repository>(repo: &T, table: layout::TableId) -> Result<Vec<RepoOrder>> {
-    repo.get_table(table)
+pub async fn get_table<T: Repository>(
+    repo: &T,
+    table_id: layout::TableId,
+) -> Result<Vec<RepoOrder>> {
+    repo.get_table(table_id)
         .await
         .map_err(OrderingError::RepoOperation)
 }
@@ -74,7 +82,9 @@ pub async fn set_quantity<T: Repository>(repo: &mut T, id: Id, quantity: u32) ->
         return cancel(repo, id).await;
     }
 
-    if let Ok(order) = repo.get(id).await {
+    if let Ok(mut order) = repo.get(id).await {
+        order.quantity = quantity;
+
         repo.update(order)
             .await
             .map_err(OrderingError::RepoOperation)
@@ -83,8 +93,6 @@ pub async fn set_quantity<T: Repository>(repo: &mut T, id: Id, quantity: u32) ->
     }
 }
 
-pub async fn cancel<T: Repository>(repo: &mut T, order: Id) -> Result<RepoOrder> {
-    repo.remove(order)
-        .await
-        .map_err(OrderingError::RepoOperation)
+pub async fn cancel<T: Repository>(repo: &mut T, id: Id) -> Result<RepoOrder> {
+    repo.remove(id).await.map_err(OrderingError::RepoOperation)
 }

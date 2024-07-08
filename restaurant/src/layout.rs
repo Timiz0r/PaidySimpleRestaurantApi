@@ -15,11 +15,16 @@ pub type RepoResult<T> = std::result::Result<T, anyhow::Error>;
 #[derive(Debug, Clone, Serialize)]
 pub struct Table {}
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TableId(pub u32);
 impl From<u32> for TableId {
     fn from(value: u32) -> Self {
         TableId(value)
+    }
+}
+impl From<TableId> for u32 {
+    fn from(value: TableId) -> Self {
+        value.0
     }
 }
 
