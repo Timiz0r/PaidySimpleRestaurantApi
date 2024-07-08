@@ -1,11 +1,16 @@
-use axum::{routing::get, Router};
+use axum::Router;
 
 use super::VersionedApi;
 
-pub fn create() -> VersionedApi {
-    VersionedApi::new("v1", Router::new().route("/foo", get(get_foo)))
-}
+mod menu_items;
+mod orders;
+mod tables;
 
-async fn get_foo() -> &'static str {
-    "foo v1!"
+pub fn create() -> VersionedApi {
+    let router = Router::new()
+        .nest("/orders", orders::create())
+        .nest("/menu_items", menu_items::create())
+        .nest("/tables", tables::create());
+
+    VersionedApi::new("v1", router)
 }

@@ -624,7 +624,11 @@ dependencies = [
 name = "restaurant-webapi"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
+ "chrono",
+ "restaurant",
+ "serde",
  "tokio",
  "tower",
 ]
