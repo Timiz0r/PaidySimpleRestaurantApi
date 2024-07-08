@@ -1,6 +1,7 @@
 use crate::{layout, menu, RepoItem};
 use chrono::{DateTime, Utc};
 use futures::Future;
+use serde::Serialize;
 use thiserror::Error;
 
 // TODO: concurrent collections
@@ -12,7 +13,7 @@ pub enum OrderingError {
 }
 
 pub type Result<T> = std::result::Result<T, OrderingError>;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Order {
     pub table: layout::RepoTable,
     pub menu_item: menu::RepoItem,

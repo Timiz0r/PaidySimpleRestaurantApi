@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::future::Future;
 use thiserror::Error;
 
@@ -10,7 +11,7 @@ pub enum LayoutError {
 }
 
 pub type Result<T> = std::result::Result<T, LayoutError>;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Table {}
 pub type RepoTable = RepoItem<Table>;
 

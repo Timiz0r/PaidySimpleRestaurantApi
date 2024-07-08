@@ -1,4 +1,4 @@
-use chrono::TimeDelta;
+use serde::Serialize;
 use std::future::Future;
 use thiserror::Error;
 
@@ -14,13 +14,18 @@ pub enum MenuError {
     NoId { item_name: String },
 }
 
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct Minutes(pub u32);
+
 type Result<T> = std::result::Result<T, MenuError>;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Item {
     // considered having the name be the key
     // but that would make name changes awkward
     pub name: String,
-    pub cook_time: TimeDelta,
+    // previously used chrono::TimeDelta, but it doesnt support serialization by default
+    // in practice, basically every individual item in a restaurant should cook in minutes, so this actually works well
+    pub cook_time: Minutes,
 }
 pub type RepoItem = crate::RepoItem<Item>;
 
@@ -45,7 +50,7 @@ impl RepoItem {
     // we could hypothetically have a MenuRepository be an optional member of MenuItem,
     // but lifetimes would get more complicated. still, since it's probably rather viable for the MenuRepository
     // to have a static lifetime, it might work out okay.
-    pub async fn set_cook_time<T: Repository>(mut self, repo: &mut T, d: TimeDelta) -> Result<()> {
+    pub async fn set_cook_time<T: Repository>(mut self, repo: &mut T, d: Minutes) -> Result<()> {
         if self.cook_time == d {
             Ok(())
         } else {

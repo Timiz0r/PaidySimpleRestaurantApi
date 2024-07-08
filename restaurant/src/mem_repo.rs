@@ -47,7 +47,7 @@ impl<T: Clone> InMemoryRepository<T> {
     }
 
     pub fn create(&mut self, item: T) -> Result<RepoItem<T>, Error> {
-        let item = RepoItem(
+        let item = RepoItem::new(
             self.counter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed),
             item,

@@ -1,4 +1,4 @@
-use chrono::{TimeDelta, Utc};
+use chrono::Utc;
 use common::{ComparableOrder, OrderRepository, StaticRepository};
 use futures::executor::LocalPool;
 use pretty_assertions::assert_eq;
@@ -16,14 +16,14 @@ fn place_orders() -> Result<(), OrderingError> {
     // we don't actually need StaticRepository for ordering tests
     // but using it to roughly illustrate its usage
     let statics = StaticRepository {
-        menu: vec![RepoItem(
+        menu: vec![RepoItem::new(
             1,
             menu::Item {
                 name: "Pasta".to_string(),
-                cook_time: TimeDelta::minutes(5),
+                cook_time: menu::Minutes(5),
             },
         )],
-        tables: vec![RepoItem(1, layout::Table {})],
+        tables: vec![RepoItem::new(1, layout::Table {})],
     };
     let mut repo = OrderRepository::new();
 
@@ -35,15 +35,15 @@ fn place_orders() -> Result<(), OrderingError> {
     ))?;
 
     assert_eq!(
-        &[ComparableOrder(RepoItem(
+        &[ComparableOrder(RepoItem::new(
             1,
             order::Order {
-                table: RepoItem(1, layout::Table {}),
-                menu_item: RepoItem(
+                table: RepoItem::new(1, layout::Table {}),
+                menu_item: RepoItem::new(
                     1,
                     menu::Item {
                         name: "Pasta".to_string(),
-                        cook_time: TimeDelta::minutes(5),
+                        cook_time: menu::Minutes(5),
                     }
                 ),
                 time_placed: Utc::now(),
@@ -60,20 +60,20 @@ fn place_orders() -> Result<(), OrderingError> {
 fn change_order_quantity() -> Result<(), OrderingError> {
     let mut pool = LocalPool::new();
     pool.run_until(async {
-        let table1 = RepoItem(1, layout::Table {});
-        let table2 = RepoItem(3, layout::Table {});
-        let pasta = RepoItem(
+        let table1 = RepoItem::new(1, layout::Table {});
+        let table2 = RepoItem::new(3, layout::Table {});
+        let pasta = RepoItem::new(
             1,
             menu::Item {
                 name: "Pasta".to_string(),
-                cook_time: TimeDelta::minutes(5),
+                cook_time: menu::Minutes(5),
             },
         );
-        let sandwich = RepoItem(
+        let sandwich = RepoItem::new(
             1,
             menu::Item {
                 name: "Sandwich".to_string(),
-                cook_time: TimeDelta::minutes(5),
+                cook_time: menu::Minutes(5),
             },
         );
         let mut repo = OrderRepository::new();
@@ -104,7 +104,7 @@ fn change_order_quantity() -> Result<(), OrderingError> {
 
         assert_eq!(
             // setting to zero removes, so only two
-            &[ComparableOrder(RepoItem(
+            &[ComparableOrder(RepoItem::new(
                 id1,
                 order::Order {
                     table: table1.clone(),
@@ -118,7 +118,7 @@ fn change_order_quantity() -> Result<(), OrderingError> {
 
         assert_eq!(
             // setting to zero removes, so only two
-            &[ComparableOrder(RepoItem(
+            &[ComparableOrder(RepoItem::new(
                 id3,
                 order::Order {
                     table: table2.clone(),
@@ -138,12 +138,12 @@ fn change_order_quantity() -> Result<(), OrderingError> {
 fn cancel_order() -> Result<(), OrderingError> {
     let mut pool = LocalPool::new();
     pool.run_until(async {
-        let table = RepoItem(1, layout::Table {});
-        let item = RepoItem(
+        let table = RepoItem::new(1, layout::Table {});
+        let item = RepoItem::new(
             1,
             menu::Item {
                 name: "Pasta".to_string(),
-                cook_time: TimeDelta::minutes(5),
+                cook_time: menu::Minutes(5),
             },
         );
         let mut repo = OrderRepository::new();

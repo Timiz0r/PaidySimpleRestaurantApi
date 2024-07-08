@@ -1,22 +1,32 @@
 use std::ops::{Deref, DerefMut};
 
+use serde::Serialize;
+
 pub mod layout;
 pub mod mem_repo;
 pub mod menu;
 pub mod order;
 
-#[derive(Clone)]
-pub struct RepoItem<T>(pub u32, pub T);
+#[derive(Clone, Serialize)]
+pub struct RepoItem<T> {
+    id: u32,
+
+    #[serde(flatten)]
+    item: T,
+}
 
 impl<T> RepoItem<T> {
+    pub fn new(id: u32, item: T) -> RepoItem<T> {
+        RepoItem { id, item }
+    }
     pub fn id(&self) -> u32 {
-        self.0
+        self.id
     }
     pub fn item(&self) -> &T {
-        &self.1
+        &self.item
     }
     pub fn item_mut(&mut self) -> &mut T {
-        &mut self.1
+        &mut self.item
     }
 }
 
@@ -24,13 +34,13 @@ impl<T> Deref for RepoItem<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        &self.1
+        &self.item
     }
 }
 
 impl<T> DerefMut for RepoItem<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.1
+        &mut self.item
     }
 }
 
