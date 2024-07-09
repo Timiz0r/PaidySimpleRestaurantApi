@@ -264,22 +264,6 @@ impl order::Repository for Database {
             .map_err(|e| anyhow::anyhow!(e))
     }
 
-    async fn get_table(
-        &self,
-        table_id: layout::TableId,
-    ) -> order::RepoResult<Vec<order::RepoOrder>> {
-        let results = self
-            .orders
-            .read()
-            .unwrap()
-            .items()
-            .iter()
-            .filter(|o| o.table.id() == table_id)
-            .cloned()
-            .collect::<Vec<order::RepoOrder>>();
-        Ok(results)
-    }
-
     async fn get(&self, id: order::Id) -> order::RepoResult<order::RepoOrder> {
         self.orders
             .read()
@@ -310,5 +294,44 @@ impl order::Repository for Database {
             .unwrap()
             .update(item)
             .map_err(|e| anyhow::anyhow!(e))
+    }
+
+    async fn remove_table_orders(
+        &self,
+        table_id: layout::TableId,
+    ) -> order::RepoResult<Vec<order::RepoOrder>> {
+        let results = self
+            .orders
+            .read()
+            .unwrap()
+            .items
+            .iter()
+            .filter(|o| o.table.id() == table_id)
+            .cloned()
+            .collect();
+
+        self.orders
+            .write()
+            .unwrap()
+            .items
+            .retain(|o| o.table.id() != table_id);
+
+        Ok(results)
+    }
+
+    async fn get_table(
+        &self,
+        table_id: layout::TableId,
+    ) -> order::RepoResult<Vec<order::RepoOrder>> {
+        let results = self
+            .orders
+            .read()
+            .unwrap()
+            .items()
+            .iter()
+            .filter(|o| o.table.id() == table_id)
+            .cloned()
+            .collect();
+        Ok(results)
     }
 }

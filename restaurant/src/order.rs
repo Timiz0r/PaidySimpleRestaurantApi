@@ -41,15 +41,20 @@ pub type RepoOrder = RepoItem<Order, Id>;
 
 pub trait Repository {
     fn get_all(&self) -> impl Future<Output = RepoResult<Vec<RepoOrder>>> + Send;
-    fn get_table(
-        &self,
-        table: layout::TableId,
-    ) -> impl Future<Output = RepoResult<Vec<RepoOrder>>> + Send;
     fn get(&self, id: Id) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
 
     fn create(&mut self, item: Order) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
     fn remove(&mut self, id: Id) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
     fn update(&mut self, item: RepoOrder) -> impl Future<Output = RepoResult<RepoOrder>> + Send;
+
+    fn get_table(
+        &self,
+        table_id: layout::TableId,
+    ) -> impl Future<Output = RepoResult<Vec<RepoOrder>>> + Send;
+    fn remove_table_orders(
+        &self,
+        table_id: layout::TableId,
+    ) -> impl Future<Output = RepoResult<Vec<RepoOrder>>> + Send;
 }
 
 pub async fn get_table<T: Repository>(
@@ -64,12 +69,12 @@ pub async fn get_table<T: Repository>(
 pub async fn place<T: Repository>(
     repo: &mut T,
     table: layout::RepoTable,
-    item: menu::RepoItem,
+    menu_item: menu::RepoItem,
     quantity: u32,
 ) -> Result<RepoOrder> {
     repo.create(Order {
         table,
-        menu_item: item,
+        menu_item,
         time_placed: Utc::now(),
         quantity,
     })
@@ -95,4 +100,13 @@ pub async fn set_quantity<T: Repository>(repo: &mut T, id: Id, quantity: u32) ->
 
 pub async fn cancel<T: Repository>(repo: &mut T, id: Id) -> Result<RepoOrder> {
     repo.remove(id).await.map_err(OrderingError::RepoOperation)
+}
+
+pub async fn clear_table<T: Repository>(
+    repo: &mut T,
+    table_id: layout::TableId,
+) -> Result<Vec<RepoOrder>> {
+    repo.remove_table_orders(table_id)
+        .await
+        .map_err(OrderingError::RepoOperation)
 }

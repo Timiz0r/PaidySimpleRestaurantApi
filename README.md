@@ -136,3 +136,12 @@ Additionally, since the client is driven by employees, we can allow them to inpu
 It's what I'd normally prefer, really just because it's most obvious what gets sent through the API
 (aka no secrets or internal data).
 There's a greater than zero percent change that I got around to it and forgot to delete this.
+
+### Integration testing
+By spinning up the service and making HTTP requests to it.
+
+### Telemetry
+As Azure's former deity of telemetry, it does actually pain me to not have added any.
+
+### Hyperlinks in responses
+Time-box!

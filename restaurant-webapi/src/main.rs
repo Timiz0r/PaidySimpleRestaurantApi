@@ -1,14 +1,21 @@
+use std::time::Duration;
+
 use axum::{
     body::Body, extract::Request, http::StatusCode, response::Response, routing::any, Extension,
     Router,
 };
-use restaurant::{layout, memdb::Database, menu};
+use restaurant::{layout, memdb::Database, menu, order::Repository};
+use tokio::join;
 use tower::{Service, ServiceBuilder};
 
 mod ver;
 
 #[tokio::main]
 async fn main() {
+    let db = create_database();
+    //gets moved before we use it for status updates, so cloning ahead of time
+    let status_db = db.clone();
+
     // purposely putting this in main so that it can be moved to the below closure
     let mut versioned_apis = ver::create_services();
     let app = Router::new().route(
@@ -28,7 +35,7 @@ async fn main() {
                     .expect("Build response should be well-formed."))
             }
         })
-        .layer(ServiceBuilder::new().layer(Extension(create_database()))),
+        .layer(ServiceBuilder::new().layer(Extension(db))),
     );
 
     let listener = tokio::net::TcpListener::bind(
@@ -38,7 +45,20 @@ async fn main() {
     )
     .await
     .unwrap();
-    axum::serve(listener, app).await.unwrap()
+
+    let statusupdate = async {
+        let mut interval = tokio::time::interval(Duration::from_secs(1));
+        loop {
+            interval.tick().await;
+
+            match status_db.get_all().await {
+                Ok(orders) => println!("Total orders: {}", orders.len()),
+                Err(err) => println!("Error getting orders: {:?}", err),
+            };
+        }
+    };
+
+    _ = join!(async { axum::serve(listener, app).await }, statusupdate);
 }
 
 fn create_database() -> Database {

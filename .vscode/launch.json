@@ -1,0 +1,120 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'restaurant'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=restaurant"
+                ],
+                "filter": {
+                    "name": "restaurant",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'ordering'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=ordering",
+                    "--package=restaurant"
+                ],
+                "filter": {
+                    "name": "ordering",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'restaurant-fakeclient'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=restaurant-fakeclient",
+                    "--package=restaurant-fakeclient"
+                ],
+                "filter": {
+                    "name": "restaurant-fakeclient",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'restaurant-fakeclient'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=restaurant-fakeclient",
+                    "--package=restaurant-fakeclient"
+                ],
+                "filter": {
+                    "name": "restaurant-fakeclient",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'restaurant-webapi'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=restaurant-webapi",
+                    "--package=restaurant-webapi"
+                ],
+                "filter": {
+                    "name": "restaurant-webapi",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'restaurant-webapi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=restaurant-webapi",
+                    "--package=restaurant-webapi"
+                ],
+                "filter": {
+                    "name": "restaurant-webapi",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

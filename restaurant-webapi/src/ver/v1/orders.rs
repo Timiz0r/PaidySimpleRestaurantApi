@@ -14,9 +14,10 @@ use crate::Database;
 pub fn create() -> Router {
     Router::new()
         .route("/orders", post(orders_post))
-        .route("/table/:tableid/orders", get(table_orders_get))
         .route("/orders/:id/setquantity", post(orders_setquantity))
         .route("/orders/:id", delete(orders_delete))
+        .route("/table/:tableid/orders", get(table_orders_get))
+        .route("/table/:tableid/clear", post(table_orders_clear))
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,7 +93,7 @@ async fn table_orders_get(
         orders
             .iter()
             .map(|o| {
-                let remaining = TimeDelta::minutes(o.menu_item.cook_time.0.into())
+                let remaining = TimeDelta::minutes((o.menu_item.cook_time.0 * o.quantity).into())
                     - (Utc::now() - o.time_placed);
 
                 OrderDetails {
@@ -141,4 +142,19 @@ async fn orders_delete(
             format!("Failed to cancel order '{:?}': {:?}", id, e),
         )
     })
+}
+
+async fn table_orders_clear(
+    Extension(mut db): Extension<Database>,
+    Path((_, table_id)): Path<(String, layout::TableId)>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    order::clear_table(&mut db, table_id)
+        .await
+        .map(Json)
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to clear table'{:?}': {:?}", table_id, e),
+            )
+        })
 }

@@ -92,11 +92,11 @@ fn change_order_quantity() -> Result<(), OrderingError> {
         }
 
         let (id1, order1) = place_order(&mut db, &table1, &pasta, 3).await?;
-        let (_, order2) = place_order(&mut db, &table1, &sandwich, 2).await?;
+        let (id2, order2) = place_order(&mut db, &table1, &sandwich, 2).await?;
         let (id3, order3) = place_order(&mut db, &table2, &sandwich, 5).await?;
 
         order::set_quantity(&mut db, order1.id(), 1).await?;
-        order::set_quantity(&mut db, order2.id(), 0).await?;
+        let zero_quantity_order = order::set_quantity(&mut db, order2.id(), 0).await?;
         order::set_quantity(&mut db, order3.id(), 7).await?;
 
         let mut orders1 = order::get_table(&db, table1.id()).await?;
@@ -130,6 +130,19 @@ fn change_order_quantity() -> Result<(), OrderingError> {
                 }
             ))][..],
             orders2.as_slice()
+        );
+
+        assert_eq!(
+            ComparableOrder(RepoItem::new(
+                id2,
+                order::Order {
+                    table: table1.clone(),
+                    menu_item: sandwich.clone(),
+                    quantity: 0,
+                    time_placed: Utc::now()
+                }
+            )),
+            zero_quantity_order
         );
 
         Ok(())

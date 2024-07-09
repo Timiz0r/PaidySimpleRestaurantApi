@@ -2,6 +2,6 @@
 resolver = "2"
 
 members = [
-    "restaurant",
+    "restaurant", "restaurant-fakeclient",
     "restaurant-webapi"
 ]
