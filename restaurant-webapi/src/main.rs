@@ -38,13 +38,11 @@ async fn main() {
         .layer(ServiceBuilder::new().layer(Extension(db))),
     );
 
-    let listener = tokio::net::TcpListener::bind(
-        std::env::args()
-            .nth(1)
-            .unwrap_or("127.0.0.1:13982".to_string()),
-    )
-    .await
-    .unwrap();
+    let endpoint = std::env::args()
+        .nth(1)
+        .unwrap_or("127.0.0.1:13982".to_string());
+    println!("Listening on: {}", endpoint);
+    let listener = tokio::net::TcpListener::bind(endpoint).await.unwrap();
 
     let statusupdate = async {
         let mut interval = tokio::time::interval(Duration::from_secs(1));

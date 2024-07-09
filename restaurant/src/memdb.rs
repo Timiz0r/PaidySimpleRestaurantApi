@@ -1,7 +1,10 @@
-use std::sync::{Arc, RwLock};
-
 use std::{
-    clone::Clone, collections::HashSet, hash::Hash, result::Result, sync::atomic::AtomicU32,
+    clone::Clone,
+    collections::HashSet,
+    hash::Hash,
+    result::Result,
+    sync::atomic::AtomicU32,
+    sync::{Arc, RwLock},
 };
 
 use crate::{layout, menu, order, RepoItem};
@@ -17,12 +20,11 @@ pub enum Error<I> {
 pub struct InMemoryRepository<T: Clone, I: Copy + Serialize> {
     items: Vec<RepoItem<T, I>>,
     idgen: Box<dyn IdGenerator<I> + Send + Sync>,
-    // using a hashmap of orders is hard here because of how we return by value a non-cloneable Order
-    // to make things easier, we'll keep a hashset of ids
     ids: HashSet<I>,
 }
 
 impl<T: Clone, I: Clone + Copy + PartialEq + Eq + Hash + Serialize> InMemoryRepository<T, I> {
+    // for convenient, non-cloned access
     pub fn items(&self) -> &Vec<RepoItem<T, I>> {
         &self.items
     }
@@ -76,6 +78,7 @@ impl<T: Clone, I: Clone + Copy + PartialEq + Eq + Hash + Serialize> InMemoryRepo
     }
 }
 
+// since the introduction of typed ids, we need an abstraction around generating them
 pub trait IdGenerator<I: Copy> {
     fn get(&self) -> I;
 }

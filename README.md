@@ -1,6 +1,18 @@
 # PaidySimpleRestaurantApi
 As described [here](https://github.com/paidy/interview/blob/master/SimpleRestaurantApi.md).
 
+## How to run
+The `restaurant-webapi` crate takes an optional `ip:port` and spins up the endpoint.
+
+The `restaurant-fakeclient` crate takes an optional `http://endpoint/` and starts spamming it with traffic.
+
+To aid in verifying that things are actually working, the server has a bunch of asserts.
+Do note that the client will fail if not run on a fresh (in-memory) database, so be sure to restart the server, as well.
+Additionally, the server periodically logs the number of orders. It doesn't log any more activity, since the client
+absolutely bombards it with traffic.
+
+Finally, note that it does use a decent chunk of CPU usage. The client is effectively a tight loop across 16 threads.
+
 ## Design methodology
 ### Ports-and-adapters
 The system is designed around the ports-and-adapters pattern.

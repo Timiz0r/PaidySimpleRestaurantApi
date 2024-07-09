@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::future::Future;
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::RepoItem;
@@ -27,7 +28,6 @@ impl From<TableId> for u32 {
         value.0
     }
 }
-
 pub type RepoTable = RepoItem<Table, TableId>;
 
 pub trait TableRepository {

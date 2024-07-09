@@ -18,6 +18,8 @@ async fn main() {
     let root = std::env::args()
         .nth(1)
         .unwrap_or("http://127.0.0.1:13982/".to_string());
+    println!("Spamming traffic at: {}", root);
+
     let client = reqwest::Client::new();
 
     let mut tasks: JoinSet<Result<(), anyhow::Error>> = JoinSet::new();
@@ -238,6 +240,17 @@ struct MenuItemDetails {
     cook_time: u32,
 }
 
+#[derive(Debug, Serialize)]
+struct CreateOrder {
+    table_id: u32,
+    item_id: u32,
+    quantity: u32,
+}
+#[derive(Debug, Serialize)]
+struct SetOrderQuantity {
+    quantity: u32,
+}
+
 #[derive(Copy, Clone)]
 enum Menu {
     Pasta = 1,
@@ -256,15 +269,4 @@ impl Distribution<Menu> for Standard {
             _ => panic!("Somehow hit a weird number"),
         }
     }
-}
-
-#[derive(Debug, Serialize)]
-struct CreateOrder {
-    table_id: u32,
-    item_id: u32,
-    quantity: u32,
-}
-#[derive(Debug, Serialize)]
-struct SetOrderQuantity {
-    quantity: u32,
 }

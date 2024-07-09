@@ -36,7 +36,6 @@ impl From<Id> for u32 {
         value.0
     }
 }
-
 pub type RepoOrder = RepoItem<Order, Id>;
 
 pub trait Repository {

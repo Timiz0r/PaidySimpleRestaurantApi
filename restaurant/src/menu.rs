@@ -3,7 +3,7 @@ use std::future::Future;
 use thiserror::Error;
 
 //TODO: want to try getting rid of the anyhow dependency
-//for this kind of application, it's fine, but, if possible, want to find a different way
+//for this kind of application, it's fine, but, if possible, want to find a different way for fun
 
 #[derive(Error, Debug)]
 pub enum MenuError {
@@ -41,7 +41,6 @@ impl From<Id> for u32 {
         value.0
     }
 }
-
 pub type RepoItem = crate::RepoItem<Item, Id>;
 
 pub trait Repository {
