@@ -1,6 +1,12 @@
 # PaidySimpleRestaurantApi
 As described [here](https://github.com/paidy/interview/blob/master/SimpleRestaurantApi.md).
 
+## Quick comment
+Since I was looking to learn Rust, I perhaps went further than what would be typical for an interview test.
+It was a lot of fun, and, while there's still plenty to improve on, I've come out feeling rather comfortable with Rust!
+All things considered, I think it went relatively well, and I hope to have the opportunity to go over the code.
+Aside from the interview-side of things, I'd love feedback, since I don't have a sense for what's normal and what's weird!
+
 ## How to run
 The `restaurant-webapi` crate takes an optional `ip:port` and spins up the endpoint.
 
